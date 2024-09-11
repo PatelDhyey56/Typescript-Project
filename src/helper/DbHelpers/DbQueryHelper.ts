@@ -17,6 +17,7 @@ const selectTable = async (
     Newtable order by id ${order} `
   );
 };
+
 const selectByValues = async (
   tableName: string,
   searchData: [string, string][],
@@ -29,7 +30,7 @@ const selectByValues = async (
     }`;
   });
   let checkID = (await queryRun(sql)) as UserTableType[];
-  if (!checkID.length) throw new Error(Messages.PEOPLE_VALIDATE);
+  if (!checkID.length) throw new Error(Messages.User_VALIDATE);
   return checkID[0];
 };
 
@@ -71,7 +72,7 @@ const updateData = async (
     no++;
     if (body.length >= no) query += ", ";
   }
-  query += `Where id=${id};`;
+  query += `Where id=${id} returning *;`;
   return await queryRun(query, bodyValues);
 };
 

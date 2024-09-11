@@ -15,7 +15,7 @@ const postRegister = async (
   const bodyValues = Object.values(req.body as RegisterType);
   try {
     await addData("User", BodyEntries, bodyValues);
-    genralResponse(res, 200, { message: Messages.LOGIN_PROFILE });
+    genralResponse(res, 200, { message: Messages.User_Login });
   } catch (e) {
     next(e);
   }
@@ -26,13 +26,17 @@ const postLogin = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = await selectByValues("User", [["email", email]], "AND");
     if (user.password === password) {
-      const token = jwt.sign(req.body, "121231232");
-      res.cookie("token", token);
+      const token = jwt.sign(req.body, String(PASSKEY));
+      genralResponse(res.cookie("token", token), 200, {
+        message: Messages.User_Login,
+        token,
+        result: user,
+      });
+    } else {
+      genralResponse(res, 200, {
+        message: Messages.User_VALIDATE,
+      });
     }
-    genralResponse(res, 200, {
-      message: Messages.LOGIN_PROFILE,
-      result: user,
-    });
   } catch (e) {
     next(e);
   }

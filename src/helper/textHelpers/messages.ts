@@ -1,11 +1,11 @@
 export default {
-  DEFAULT_RESPONCE: "Your Response get by us!!",
-  ALL_PROFILES: "All Profiles :)",
-  LOGIN_PROFILE: "People Created successfully :)",
+  DEFAULT_RESPONSE: "Your Response get by us!!",
   SERVER_ERROR: "Internal server error !!!",
   VALIDATION_ERROR: "Please Enter Valid Data !!!",
-  PEOPLE_GET: "Selected People geting successfully :)",
-  PEOPLE_UPDATED: "People Updated successfully :)",
-  PEOPLE_DELETE: "People Deleted successfully :)",
-  PEOPLE_VALIDATE: "Pelease Enter Valid Profile!!!",
+  User_VALIDATE: "Pelease Enter Valid Profile!!!",
+  All_Users: "All Profiles :)",
+  User_Login: "User Created successfully :)",
+  User_Get: "Selected User geting successfully :)",
+  User_Updated: "User Updated successfully :)",
+  User_Delete: "User Deleted successfully :)",
 };

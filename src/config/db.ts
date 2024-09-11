@@ -10,7 +10,7 @@ const db = new Pool({
   password: DB_PASSWORD,
 });
 
-db.connect(function (err: Error | undefined) {
+db.connect(function (err: Error | undefined): void {
   if (err) throw err;
   console.log("Db Connected :)");
 });

@@ -9,36 +9,36 @@ const selectTable = async (
   lastId = 0,
   next = true,
   order = "asc"
-) => {
-  return await queryRun(
+): Promise<UserTableType[]> => {
+  return (await queryRun(
     `SELECT * FROM  ( SELECT * FROM "${DB_SCHEMA}"."${tableName}" 
     where id ${next ? ">" : "<"} ${lastId} order by id 
     ${next ? "asc" : "desc"} ${!!limit ? `limit ${limit}` : ""} )
     Newtable order by id ${order} `
-  );
+  )) as UserTableType[];
 };
 
 const selectByValues = async (
   tableName: string,
   searchData: [string, string][],
   condition = "AND"
-) => {
+): Promise<UserTableType> => {
   let sql = `SELECT * FROM "${DB_SCHEMA}"."${tableName}" where `;
   searchData.forEach((e, index) => {
     sql += `${e[0]}='${e[1]}' ${
       !!condition && index < searchData.length - 1 ? `${condition} ` : ""
     }`;
   });
-  let checkID = (await queryRun(sql)) as UserTableType[];
-  if (!checkID.length) throw new Error(Messages.User_VALIDATE);
-  return checkID[0];
+  let checkID = (await queryRun(sql))[0] as UserTableType;
+  if (!checkID) throw new Error(Messages.User_VALIDATE);
+  return checkID;
 };
 
 const addData = async (
   tableName: string,
   body: [string, string][],
   bodyValues: string[]
-) => {
+): Promise<UserTableType[]> => {
   let query = `INSERT INTO "${DB_SCHEMA}"."${tableName}"`;
   let col = "(";
   let val = "(";
@@ -56,7 +56,7 @@ const addData = async (
     }
   }
   query += `${col} VALUES ${val}`;
-  return await queryRun(query, bodyValues);
+  return (await queryRun(query, bodyValues)) as UserTableType[];
 };
 
 const updateData = async (
@@ -64,7 +64,7 @@ const updateData = async (
   id: number,
   body: [string, string][],
   bodyValues: string[]
-) => {
+): Promise<UserTableType> => {
   let query = `Update "${DB_SCHEMA}"."${tableName}" SET `;
   let no = 1;
   for (let e of body) {
@@ -73,13 +73,18 @@ const updateData = async (
     if (body.length >= no) query += ", ";
   }
   query += `Where id=${id} returning *;`;
-  return await queryRun(query, bodyValues);
+  return (await queryRun(query, bodyValues))[0] as UserTableType;
 };
 
-const deleteData = async (tableName: string, id: number) => {
-  return await queryRun(
-    `DELETE FROM "${DB_SCHEMA}"."${tableName}" WHERE id = ${id};`
-  );
+const deleteData = async (
+  tableName: string,
+  id: number
+): Promise<UserTableType> => {
+  return (
+    await queryRun(
+      `DELETE FROM "${DB_SCHEMA}"."${tableName}" WHERE id = ${id} returning *;`
+    )
+  )[0] as UserTableType;
 };
 
 export { selectTable, selectByValues, updateData, deleteData, addData };

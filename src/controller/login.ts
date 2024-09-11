@@ -10,7 +10,7 @@ const postRegister = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   const BodyEntries = Object.entries(req.body as RegisterType);
   const bodyValues = Object.values(req.body as RegisterType);
   try {
@@ -21,7 +21,11 @@ const postRegister = async (
   }
 };
 
-const postLogin = async (req: Request, res: Response, next: NextFunction) => {
+const postLogin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   const { email, password } = req.body as RegisterType;
   try {
     const user = await selectByValues("User", [["email", email]], "AND");

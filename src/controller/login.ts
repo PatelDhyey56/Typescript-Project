@@ -2,9 +2,9 @@ import type { NextFunction, Request, Response } from "express";
 import { genralResponse } from "../helper/generalFunction";
 import { addData, selectByValues } from "../helper/DbHelpers/DbQueryHelper";
 import Messages from "../helper/textHelpers/messages";
-import type { RegisterType, UserTableType } from "../types/dbTypes";
+import type { RegisterType } from "../types/dbTypes";
 import jwt from "jsonwebtoken";
-import { PASSKEY } from "../config";
+import { SERVER } from "../config";
 
 const postRegister = async (
   req: Request,
@@ -30,7 +30,7 @@ const postLogin = async (
   try {
     const user = await selectByValues("User", [["email", email]], "AND");
     if (user.password === password) {
-      const token = jwt.sign(req.body, String(PASSKEY));
+      const token = jwt.sign(req.body, SERVER.PASSKEY);
       genralResponse(res.cookie("token", token), 200, {
         message: Messages.User_Login,
         token,

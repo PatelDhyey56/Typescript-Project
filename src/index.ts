@@ -1,7 +1,5 @@
-// import bodyParser from "body-parser";
 import express from "express";
-import { PORT } from "./config";
-import bodyParser from "body-parser";
+import { SERVER } from "./config";
 import cookieParser from "cookie-parser";
 import router from "./routers/router";
 import { errorHandler } from "./helper/generalFunction";
@@ -13,6 +11,6 @@ app.use(cookieParser());
 app.use(router);
 app.use(errorHandler);
 
-app.listen(PORT, () =>
-  console.log(`Server Listen at http://localhost:${PORT}`)
+app.listen(SERVER.PORT, () =>
+  console.log(`Server Listen at http://localhost:${SERVER.PORT}`)
 );

@@ -1,4 +1,4 @@
-import { DB_SCHEMA } from "../../config";
+import { DB_CONFIG } from "../../config";
 import { queryRun } from "../../config/db";
 import type { UserTableType } from "../../types/dbTypes";
 import Messages from "../textHelpers/messages";
@@ -11,7 +11,7 @@ const selectTable = async (
   order = "asc"
 ): Promise<UserTableType[]> => {
   return (await queryRun(
-    `SELECT * FROM  ( SELECT * FROM "${DB_SCHEMA}"."${tableName}" 
+    `SELECT * FROM  ( SELECT * FROM "${DB_CONFIG.DB_SCHEMA}"."${tableName}" 
     where id ${next ? ">" : "<"} ${lastId} order by id 
     ${next ? "asc" : "desc"} ${!!limit ? `limit ${limit}` : ""} )
     Newtable order by id ${order} `
@@ -23,7 +23,7 @@ const selectByValues = async (
   searchData: [string, string][],
   condition = "AND"
 ): Promise<UserTableType> => {
-  let sql = `SELECT * FROM "${DB_SCHEMA}"."${tableName}" where `;
+  let sql = `SELECT * FROM "${DB_CONFIG.DB_SCHEMA}"."${tableName}" where `;
   searchData.forEach((e, index) => {
     sql += `${e[0]}='${e[1]}' ${
       !!condition && index < searchData.length - 1 ? `${condition} ` : ""
@@ -39,7 +39,7 @@ const addData = async (
   body: [string, string][],
   bodyValues: string[]
 ): Promise<UserTableType[]> => {
-  let query = `INSERT INTO "${DB_SCHEMA}"."${tableName}"`;
+  let query = `INSERT INTO "${DB_CONFIG.DB_SCHEMA}"."${tableName}"`;
   let col = "(";
   let val = "(";
   let no = 1;
@@ -65,7 +65,7 @@ const updateData = async (
   body: [string, string][],
   bodyValues: string[]
 ): Promise<UserTableType> => {
-  let query = `Update "${DB_SCHEMA}"."${tableName}" SET `;
+  let query = `Update "${DB_CONFIG.DB_SCHEMA}"."${tableName}" SET `;
   let no = 1;
   for (let e of body) {
     query += `${e[0]}= $${no}`;
@@ -82,7 +82,7 @@ const deleteData = async (
 ): Promise<UserTableType> => {
   return (
     await queryRun(
-      `DELETE FROM "${DB_SCHEMA}"."${tableName}" WHERE id = ${id} returning *;`
+      `DELETE FROM "${DB_CONFIG.DB_SCHEMA}"."${tableName}" WHERE id = ${id} returning *;`
     )
   )[0] as UserTableType;
 };

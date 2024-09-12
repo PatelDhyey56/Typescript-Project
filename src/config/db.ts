@@ -1,13 +1,13 @@
 import postgresql, { type QueryResultRow } from "pg";
-import { DB_DATABASE, DB_HOST, DB_PASSWORD, DB_PORT, DB_USER } from "./index";
+import { DB_CONFIG } from "./index";
 const { Pool } = postgresql;
 
 const db = new Pool({
-  user: DB_USER,
-  host: DB_HOST,
-  port: Number(DB_PORT),
-  database: DB_DATABASE,
-  password: DB_PASSWORD,
+  user: DB_CONFIG.DB_USER,
+  host: DB_CONFIG.DB_HOST,
+  port: DB_CONFIG.DB_PORT,
+  database: DB_CONFIG.DB_DATABASE,
+  password: DB_CONFIG.DB_PASSWORD,
 });
 
 db.connect(function (err: Error | undefined): void {

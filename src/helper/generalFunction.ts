@@ -2,7 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import Messages from "./textHelpers/messages";
 import type { responseType } from "../types/globleTypes";
 import jwt from "jsonwebtoken";
-import { PASSKEY } from "../config";
+import { SERVER } from "../config";
 
 const genralResponse = (
   res: Response,
@@ -31,7 +31,7 @@ const ValidateUser = (
 ): void => {
   const { token } = req.cookies;
   try {
-    let verify = jwt.verify(token, String(PASSKEY));
+    let verify = jwt.verify(token, SERVER.PASSKEY);
     if (!verify) throw new Error(Messages.User_VALIDATE);
     next();
   } catch (e) {

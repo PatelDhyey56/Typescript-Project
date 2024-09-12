@@ -1,7 +1,7 @@
 export default {
-  See_People_List: "See_People_List",
-  See_People_Hash: "People:",
-  DB_Add_People_Hash: "Add_People:",
-  DB_Update_People_Hash: "Update_People:",
-  DB_People_Sets: "DB_People_set:",
+  See_User_List: "See_User_List",
+  See_User_Hash: "See_User:",
+  DB_Delete_User_Hash: "Delete_User:",
+  DB_Update_User_Hash: "Update_User:",
+  DB_User_List: "DB_User_List:",
 };

@@ -1,22 +1,38 @@
 import type { NextFunction, Request, Response } from "express";
 import { genralResponse } from "../helper/generalFunction";
-import {
-  deleteData,
-  selectByValues,
-  selectTable,
-  updateData,
-} from "../helper/DbHelpers/DbQueryHelper";
+import { selectByValues, selectTable } from "../helper/DbHelpers/DbQueryHelper";
 import Messages from "../helper/textHelpers/messages";
+import RedisMessages from "../helper/textHelpers/redisHelper";
 import type { UserTableType } from "../types/dbTypes";
+import {
+  getObjectArrayCache,
+  getObjectCache,
+  setObjectArrayCache,
+  setObjectCache,
+} from "../helper/DbHelpers/redis/userRedis";
+import type { RedisObject } from "../types/redis";
 
-let result: UserTableType | UserTableType[];
+let result:
+    | UserTableType
+    | UserTableType[]
+    | RedisObject[]
+    | RedisObject
+    | Boolean,
+  redisData;
 const userList = async (
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    result = await selectTable("User");
+    redisData = await getObjectArrayCache(RedisMessages.See_User_List);
+    result = !!redisData.length ? redisData : await selectTable("User");
+    !redisData.length &&
+      setObjectArrayCache(
+        RedisMessages.See_User_List,
+        RedisMessages.See_User_Hash,
+        result as UserTableType[]
+      );
     genralResponse(res, 200, { message: Messages.All_Users, result });
   } catch (e) {
     next(e);
@@ -30,7 +46,16 @@ const userById = async (
 ): Promise<void> => {
   const { id } = req.params;
   try {
-    result = await selectByValues("User", [["id", id]]);
+    redisData = await getObjectCache(`${RedisMessages.See_User_Hash}${id}`);
+    result = !!redisData
+      ? redisData
+      : await selectByValues("User", [["id", id]]);
+    !redisData &&
+      setObjectCache(
+        RedisMessages.See_User_List,
+        `${RedisMessages.See_User_Hash}${id}`,
+        result as UserTableType
+      );
     genralResponse(res, 200, { message: Messages.User_Get, result });
   } catch (e) {
     next(e);
@@ -43,12 +68,23 @@ const updateUser = async (
   next: NextFunction
 ): Promise<void> => {
   const { id } = req.params;
-  const BodyEntries = Object.entries(req.body as UserTableType);
-  const BodyValues = Object.values(req.body as UserTableType);
+  const Body = req.body;
   try {
-    await selectByValues("User", [["id", id]]);
-    result = await updateData("User", +id, BodyEntries, BodyValues);
-    genralResponse(res, 200, { message: Messages.User_Updated, result });
+    redisData = await getObjectCache(
+      `${RedisMessages.DB_Update_User_Hash}${id}`
+    );
+    result = !!redisData
+      ? false
+      : await setObjectCache(
+          RedisMessages.DB_User_List,
+          `${RedisMessages.DB_Update_User_Hash}${id}`,
+          Body
+        );
+    genralResponse(res, 200, {
+      message: result
+        ? Messages.User_Updated
+        : "User Update is already in Queue",
+    });
   } catch (e) {
     next(e);
   }
@@ -61,9 +97,24 @@ const deleteUser = async (
 ): Promise<void> => {
   const { id } = req.params;
   try {
-    await selectByValues("User", [["id", id]]);
-    result = await deleteData("User", +id);
-    genralResponse(res, 200, { message: Messages.User_Delete, result });
+    redisData = await getObjectCache(
+      `${RedisMessages.DB_Delete_User_Hash}${id}`
+    );
+    if (!redisData) {
+      let data = await selectByValues("User", [["id", id]]);
+      result = await setObjectCache(
+        RedisMessages.DB_User_List,
+        `${RedisMessages.DB_Delete_User_Hash}${id}`,
+        data
+      );
+    } else {
+      result = false;
+    }
+    genralResponse(res, 200, {
+      message: result
+        ? Messages.User_Updated
+        : "User Delete is already in Queue",
+    });
   } catch (e) {
     next(e);
   }

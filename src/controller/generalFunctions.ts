@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import {
+  addData,
   selectByValues,
   selectTable,
   updateData,
@@ -13,6 +14,18 @@ const AllData =
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       result = await selectTable(tableName);
+      genralResponse(res, 200, { message: Messages.All_Users, result });
+    } catch (e) {
+      next(e);
+    }
+  };
+const AddData =
+  (tableName: string) =>
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const objEntries = Object.entries(req.body) as [string, string][];
+    const objValues = Object.values(req.body) as string[];
+    try {
+      result = await addData(tableName, objEntries, objValues);
       genralResponse(res, 200, { message: Messages.All_Users, result });
     } catch (e) {
       next(e);
@@ -35,6 +48,7 @@ const UpdateData =
   (tableName: string) =>
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const { id } = req.params;
+    console.log(req.body);
     const objEntries = Object.entries(req.body) as [string, string][];
     const objValues = Object.values(req.body) as string[];
     try {
@@ -62,4 +76,4 @@ const DeleteData =
     }
   };
 
-export { AllData, DataById, UpdateData, DeleteData };
+export { AllData, AddData, DataById, UpdateData, DeleteData };

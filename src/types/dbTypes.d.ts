@@ -12,11 +12,3 @@ export interface UserTableType extends RegisterType {
   Dob?: Date;
   timestamp?: Date;
 }
-
-export interface HotelTableType {
-  id: number;
-  name: string;
-  hotel_type: string;
-  place: string;
-  deleted: boolean;
-}

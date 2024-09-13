@@ -1,5 +1,4 @@
 import type { QueryResultRow } from "pg";
-import { DB_CONFIG } from "../../config";
 import { queryRun } from "../../config/db";
 import type { UserTableType } from "../../types/dbTypes";
 import Messages from "../textHelpers/messages";
@@ -39,7 +38,7 @@ const addData = async (
   tableName: string,
   body: [string, string][],
   bodyValues: string[]
-): Promise<QueryResultRow[]> => {
+): Promise<QueryResultRow> => {
   let query = `INSERT INTO ${tableName}`;
   let col = "(";
   let val = "(";
@@ -56,8 +55,8 @@ const addData = async (
       val += ")";
     }
   }
-  query += `${col} VALUES ${val}`;
-  return (await queryRun(query, bodyValues)) as QueryResultRow[];
+  query += `${col} VALUES ${val} returning *`;
+  return (await queryRun(query, bodyValues))[0] as QueryResultRow;
 };
 
 const updateData = async (

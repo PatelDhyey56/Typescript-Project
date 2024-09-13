@@ -1,7 +1,7 @@
 import { createClient } from "redis";
-import { REDIS } from "../../../config/index";
 import redisHelper from "../../textHelpers/redisHelper";
-import { addData, updateData } from "../DbQueryHelper";
+import { addData, deleteData, updateData } from "../DbQueryHelper";
+import { REDIS } from "../../../config";
 
 const redis = createClient();
 
@@ -19,14 +19,17 @@ setInterval(async (key: string = redisHelper.DB_User_List) => {
       if (!!data) {
         const objEntries = Object.entries(data);
         const objValues = Object.values(data);
-        popData.includes(redisHelper.DB_Update_User_Hash)
+        console.log(objEntries, objValues);
+        popData.includes(redisHelper.DB_Add_User_Hash)
+          ? await addData("User", objEntries, objValues)
+          : popData.includes(redisHelper.DB_Update_User_Hash)
           ? await updateData(
               "User",
               +popData.split(":")[1],
               objEntries,
               objValues
             )
-          : await addData("User", objEntries, objValues);
+          : await deleteData("User", +popData.split(":")[1]);
         await redis.multi().rPop(key).del(popData).exec();
       }
       setLen--;

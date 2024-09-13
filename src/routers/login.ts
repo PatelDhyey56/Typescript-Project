@@ -1,10 +1,13 @@
 import { Router } from "express";
 import { postLogin, postRegister } from "../controller/login";
-import { registerUserValidate } from "../helper/validation/UserValidation";
+import {
+  Authentication,
+  ValidateJoi,
+} from "../helper/validation/JoiValidation";
 
 const loginRouter = Router();
 
-loginRouter.route("/register").post(registerUserValidate, postRegister);
-loginRouter.route("/login").post(registerUserValidate, postLogin);
+loginRouter.route("/register").post(ValidateJoi(Authentication), postRegister);
+loginRouter.route("/login").post(ValidateJoi(Authentication), postLogin);
 
 export { loginRouter };

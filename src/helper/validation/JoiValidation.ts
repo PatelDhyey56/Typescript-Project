@@ -20,6 +20,7 @@ export const UserUpdate = Joi.object({
 
 const ValidateJoi = (schema: Joi.ObjectSchema) => {
   return (req: Request, res: Response, next: NextFunction) => {
+    console.log(req.file);
     const validator = schema.validate(req.body);
     if (validator.error) throw new Error(validator.error.message);
     next();

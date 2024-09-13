@@ -13,6 +13,6 @@ export const DB_CONFIG = {
   DB_SCHEMA: process.env.DB_SCHEMA,
 };
 export const REDIS = {
-  REDIS_TTL: +(process.env.REDIS_TTL || 3600),
+  REDIS_TTL: +(process.env.REDIS_TTL || 3660),
   REDIS_DATA_ENTRY_TIME: +(process.env.REDIS_DATA_ENTRY_TIME || 3600000),
 };

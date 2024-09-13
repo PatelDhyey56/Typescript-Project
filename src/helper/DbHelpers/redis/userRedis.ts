@@ -44,7 +44,7 @@ async function setObjectCache(
   listName: string,
   objectName: string,
   data: UserTableType,
-  ttl: number = REDIS.REDIS_DATA_ENTRY_TIME
+  ttl: number = REDIS.REDIS_TTL
 ): Promise<boolean> {
   try {
     let obj = objectToString(data);
@@ -53,7 +53,7 @@ async function setObjectCache(
       .hSet(objectName, obj)
       .lPush(listName, objectName)
       .expire(objectName, ttl)
-      .expire(objectName, ttl)
+      .expire(listName, ttl)
       .exec();
     return true;
   } catch (err) {

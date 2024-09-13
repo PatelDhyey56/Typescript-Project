@@ -19,7 +19,6 @@ setInterval(async (key: string = redisHelper.DB_User_List) => {
       if (!!data) {
         const objEntries = Object.entries(data);
         const objValues = Object.values(data);
-        console.log(objEntries, objValues);
         popData.includes(redisHelper.DB_Add_User_Hash)
           ? await addData("User", objEntries, objValues)
           : popData.includes(redisHelper.DB_Update_User_Hash)

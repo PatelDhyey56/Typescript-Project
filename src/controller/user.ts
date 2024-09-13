@@ -3,6 +3,7 @@ import { genralResponse } from "../helper/generalFunction";
 import { selectByValues, selectTable } from "../helper/DbHelpers/DbQueryHelper";
 import Messages from "../helper/textHelpers/messages";
 import RedisMessages from "../helper/textHelpers/redisHelper";
+import DB from "../helper/textHelpers/Db_helper";
 import type { UserTableType } from "../types/dbTypes";
 import {
   getObjectArrayCache,
@@ -26,7 +27,7 @@ const userList = async (
 ): Promise<void> => {
   try {
     redisData = await getObjectArrayCache(RedisMessages.See_User_List);
-    result = !!redisData.length ? redisData : await selectTable("User");
+    result = !!redisData.length ? redisData : await selectTable(DB.User_Table);
     !redisData.length &&
       setObjectArrayCache(
         RedisMessages.See_User_List,
@@ -49,7 +50,7 @@ const userById = async (
     redisData = await getObjectCache(`${RedisMessages.See_User_Hash}${id}`);
     result = !!redisData
       ? redisData
-      : await selectByValues("User", [["id", id]]);
+      : ((await selectByValues(DB.User_Table, [["id", id]])) as UserTableType);
     !redisData &&
       setObjectCache(
         RedisMessages.See_User_List,
@@ -101,7 +102,9 @@ const deleteUser = async (
       `${RedisMessages.DB_Delete_User_Hash}${id}`
     );
     if (!redisData) {
-      let data = await selectByValues("User", [["id", id]]);
+      let data = (await selectByValues(DB.User_Table, [
+        ["id", id],
+      ])) as UserTableType;
       result = await setObjectCache(
         RedisMessages.DB_User_List,
         `${RedisMessages.DB_Delete_User_Hash}${id}`,

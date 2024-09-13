@@ -17,7 +17,7 @@ export const photoUpload = Multer({
     file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)
       ? cb(null, true)
       : cb(
-          new Error(`Unsupported file type ${extname(file.originalname)}`),
+          new Error(`Unsupported file type : ${extname(file.originalname)}`),
           false
         ),
 });

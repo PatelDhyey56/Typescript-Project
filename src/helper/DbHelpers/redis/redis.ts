@@ -1,5 +1,6 @@
 import { createClient } from "redis";
 import redisHelper from "../../textHelpers/redisHelper";
+import DB from "../../textHelpers/Db_helper";
 import { addData, deleteData, updateData } from "../DbQueryHelper";
 import { REDIS } from "../../../config";
 
@@ -20,23 +21,24 @@ setInterval(async (key: string = redisHelper.DB_User_List) => {
         const objEntries = Object.entries(data);
         const objValues = Object.values(data);
         popData.includes(redisHelper.DB_Add_User_Hash)
-          ? await addData("User", objEntries, objValues)
+          ? await addData(DB.User_Table, objEntries, objValues)
           : popData.includes(redisHelper.DB_Update_User_Hash)
           ? await updateData(
-              "User",
+              DB.User_Table,
               +popData.split(":")[1],
               objEntries,
               objValues
             )
-          : await deleteData("User", +popData.split(":")[1]);
+          : await deleteData(DB.User_Table, +popData.split(":")[1]);
         await redis.multi().rPop(key).del(popData).exec();
       }
       setLen--;
+      await redis.flushAll();
       console.log(`Data Maintained By Redis!!!`);
     }
   } catch (err) {
     console.log(err);
   }
-}, REDIS.REDIS_DATA_ENTRY_TIME);
+}, REDIS.REDIS_TTL * 1000);
 
 export { redis };

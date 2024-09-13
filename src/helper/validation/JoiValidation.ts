@@ -12,7 +12,7 @@ export const UserUpdate = Joi.object({
   fname: Joi.string(),
   lname: Joi.string(),
   mobileNo: Joi.string().length(10),
-  gender: Joi.string().length(10),
+  gender: Joi.string().valid("Male", "Female", "Other"),
   age: Joi.number().min(1).max(200),
   Dob: Joi.date().greater(new Date("1950-01-01")),
   timeStamp: Joi.string(),

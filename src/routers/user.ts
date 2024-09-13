@@ -5,9 +5,9 @@ import { photoUpload } from "../middleware/multer";
 
 const userRouter = Router();
 
-userRouter.route("/").get(userList);
+userRouter.route("/user").get(userList);
 userRouter
-  .route("/:id")
+  .route("/user/:id")
   .get(userById)
   .put(photoUpload.single("file"), ValidateJoi(UserUpdate), updateUser)
   .delete(deleteUser);

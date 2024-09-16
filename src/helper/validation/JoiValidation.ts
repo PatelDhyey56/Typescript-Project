@@ -85,3 +85,16 @@ export const ProductUpdate = Joi.object({
   quantity: Joi.number().min(1),
   deleted: Joi.boolean(),
 });
+
+export const OrderValidate = Joi.object({
+  user_id: Joi.number().min(1).required(),
+  product: Joi.array()
+    .items(
+      Joi.object({
+        Product_id: Joi.number().min(1).required(),
+        Quantity: Joi.number().min(1).required(),
+      }).required()
+    )
+    .required(),
+  total: Joi.number().min(1).required(),
+});

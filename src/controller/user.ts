@@ -20,6 +20,7 @@ let result:
     | RedisObject
     | Boolean,
   redisData;
+
 const userList = async (
   req: Request,
   res: Response,

@@ -7,8 +7,9 @@ import {
 } from "../helper/DbHelpers/DbQueryHelper";
 import Messages from "../helper/textHelpers/messages";
 import { genralResponse } from "../helper/generalFunction";
+import { getObjectArrayCache } from "../helper/DbHelpers/redis/userRedis";
 
-let result;
+let result, redisData;
 const AllData =
   (tableName: string) =>
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -76,4 +77,29 @@ const DeleteData =
     }
   };
 
-export { AllData, AddData, DataById, UpdateData, DeleteData };
+const redisGetListOfData =
+  (
+    tableName: string,
+    redisListName: string[],
+    redisSetFunction: Function,
+    message: string
+  ) =>
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      redisData = await getObjectArrayCache(redisListName[0]);
+      result = !!redisData.length ? redisData : await selectTable(tableName);
+      !redisData.length &&
+        redisSetFunction(redisListName[0], redisListName[1], result);
+      genralResponse(res, 200, { message, result });
+    } catch (e) {
+      next(e);
+    }
+  };
+export {
+  AllData,
+  AddData,
+  DataById,
+  UpdateData,
+  DeleteData,
+  redisGetListOfData,
+};

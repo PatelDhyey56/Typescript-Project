@@ -30,7 +30,7 @@ const selectByValues = async (
     }`;
   });
   let checkID = (await queryRun(sql))[0] as QueryResultRow;
-  if (!checkID) throw new Error(Messages.User_VALIDATE);
+  if (!checkID) throw new Error(Messages.Item_VALIDATE);
   return checkID;
 };
 
@@ -62,7 +62,7 @@ const addData = async (
 const updateData = async (
   tableName: string,
   id: number,
-  body: [string, string][],
+  body: [string, string | number][],
   bodyValues: string[]
 ): Promise<QueryResultRow> => {
   let query = `Update ${tableName} SET `;

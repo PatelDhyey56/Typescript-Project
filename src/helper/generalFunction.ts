@@ -32,7 +32,7 @@ const ValidateUser = (
   const { token } = req.cookies;
   try {
     let verify = jwt.verify(token, SERVER.PASSKEY);
-    if (!verify) throw new Error(Messages.User_VALIDATE);
+    if (!verify) throw new Error(Messages.See_Product_List);
     next();
   } catch (e) {
     next(e);

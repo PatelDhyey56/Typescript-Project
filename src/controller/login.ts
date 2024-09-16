@@ -39,7 +39,7 @@ const postLogin = async (
       });
     } else {
       genralResponse(res, 200, {
-        message: Messages.User_VALIDATE,
+        message: Messages.See_Product_List,
       });
     }
   } catch (e) {

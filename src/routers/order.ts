@@ -20,7 +20,8 @@ orderRouter
   .get(
     redisGetListOfData(
       DB.All_Product_List,
-      [RedisMessages.See_Product_List, RedisMessages.See_Product_Hash],
+      RedisMessages.See_Product_List,
+      RedisMessages.See_Product_Hash,
       setObjectArrayCache,
       Messages.All_Users
     )
@@ -32,7 +33,7 @@ orderRouter
 orderRouter
   .route("/order/:id")
   .get(DataById(DB.Order_Table))
-  .put(ValidateJoi(OrderValidate), updateUser)
+  .patch(ValidateJoi(OrderValidate), updateUser)
   .delete(DeleteData(DB.Order_Table));
 
 export { orderRouter };

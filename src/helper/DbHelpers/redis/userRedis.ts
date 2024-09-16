@@ -7,11 +7,11 @@ export let userData: RedisObject[] | RedisObject;
 async function setObjectArrayCache(
   listName: string,
   objectName: string,
-  data: UserTableType[],
+  data: (UserTableType | RedisObject)[],
   ttl: number = REDIS.REDIS_TTL
 ): Promise<boolean> {
   try {
-    data.map(async (e: UserTableType): Promise<void> => {
+    data.map(async (e: UserTableType | RedisObject): Promise<void> => {
       let obj: RedisObject = objectToString(e);
       await redis
         .multi()

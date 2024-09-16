@@ -33,7 +33,7 @@ const userList = async (
       setObjectArrayCache(
         RedisMessages.See_User_List,
         RedisMessages.See_User_Hash,
-        result as UserTableType[]
+        result
       );
     genralResponse(res, 200, { message: Messages.All_Users, result });
   } catch (e) {

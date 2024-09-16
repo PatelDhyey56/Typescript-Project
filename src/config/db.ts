@@ -27,5 +27,7 @@ const queryRun = (
     });
   });
 };
+const DbTransactionStart = async () => await db.query("BEGIN");
+const DbTransactionEnd = async () => await db.query("COMMIT");
 
-export { db, queryRun };
+export { db, queryRun, DbTransactionStart, DbTransactionEnd };

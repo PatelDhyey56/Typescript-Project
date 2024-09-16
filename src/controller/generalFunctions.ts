@@ -80,16 +80,17 @@ const DeleteData =
 const redisGetListOfData =
   (
     tableName: string,
-    redisListName: string[],
+    redisListName: string,
+    redisHashName: string,
     redisSetFunction: Function,
     message: string
   ) =>
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      redisData = await getObjectArrayCache(redisListName[0]);
+      redisData = await getObjectArrayCache(redisListName);
       result = !!redisData.length ? redisData : await selectTable(tableName);
       !redisData.length &&
-        redisSetFunction(redisListName[0], redisListName[1], result);
+        redisSetFunction(redisListName, redisHashName, result);
       genralResponse(res, 200, { message, result });
     } catch (e) {
       next(e);

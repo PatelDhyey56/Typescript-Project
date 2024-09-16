@@ -26,7 +26,7 @@ const registerUserValidate = (
 
 const putUserValidate = (req: Request, res: Response, next: NextFunction) => {
   const bodyData = req.body;
-  let bodyKeys = Object.keys(req.body);
+  let bodyKeys: string[] = Object.keys(req.body);
   for (let e in putUserValidCheck as ValidationType) {
     if (!bodyKeys.length) return next();
     bodyKeys.pop();

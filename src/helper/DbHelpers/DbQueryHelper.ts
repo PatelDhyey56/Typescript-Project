@@ -1,6 +1,5 @@
 import type { QueryResultRow } from "pg";
 import { queryRun } from "../../config/db";
-import type { UserTableType } from "../../types/dbTypes";
 import Messages from "../textHelpers/messages";
 
 const selectTable = async (
@@ -9,13 +8,13 @@ const selectTable = async (
   lastId = 0,
   next = true,
   order = "asc"
-): Promise<UserTableType[]> => {
+): Promise<QueryResultRow[]> => {
   return (await queryRun(
     `SELECT * FROM  ( SELECT * FROM ${tableName} 
     where id ${next ? ">" : "<"} ${lastId} order by id 
     ${next ? "asc" : "desc"} ${!!limit ? `limit ${limit}` : ""} )
     Newtable order by id ${order} `
-  )) as UserTableType[];
+  )) as QueryResultRow[];
 };
 
 const selectByValues = async (

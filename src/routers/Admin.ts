@@ -27,7 +27,7 @@ const CrudRouter = Router();
       .post(ValidateJoi(route[2]), AddData(route[1]));
     CrudRouter.route(`${route[0]}/:id`)
       .get(DataById(route[1]))
-      .put(ValidateJoi(route[3]), UpdateData(route[1]))
+      .patch(ValidateJoi(route[3]), UpdateData(route[1]))
       .delete(DeleteData(route[1]));
   }
 })([

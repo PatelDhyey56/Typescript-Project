@@ -9,7 +9,7 @@ userRouter.route("/user").get(userList);
 userRouter
   .route("/user/:id")
   .get(userById)
-  .put(photoUpload.single("file"), ValidateJoi(UserUpdate), updateUser)
+  .patch(photoUpload.single("file"), ValidateJoi(UserUpdate), updateUser)
   .delete(deleteUser);
 
 export { userRouter };

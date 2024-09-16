@@ -10,4 +10,9 @@ export default {
   User_Updated: "User Updated Successfully :)",
   User_Delete: "User Deleted Successfully :)",
   Order_Add: "Order Added Successfully :)",
+  Order_Update: "Order Updated Successfully :)",
+  All_Products: "All Products :)",
+  Product_Get: "Selected Product geting Successfully :)",
+  All_Orders: "All Orders :)",
+  Order_Get: "Selected Orders geting Successfully :)",
 };

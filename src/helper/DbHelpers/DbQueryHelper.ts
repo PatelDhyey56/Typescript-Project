@@ -64,6 +64,7 @@ const updateData = async (
   body: [string, string | number][],
   bodyValues: string[]
 ): Promise<QueryResultRow> => {
+  console.log(body, bodyValues);
   let query = `Update ${tableName} SET `;
   let no = 1;
   for (let e of body) {

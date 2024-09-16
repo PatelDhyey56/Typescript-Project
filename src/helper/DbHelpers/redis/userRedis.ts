@@ -1,3 +1,4 @@
+import type { QueryResultRow } from "pg";
 import { REDIS } from "../../../config";
 import type { UserTableType } from "../../../types/dbTypes";
 import type { RedisObject } from "../../../types/redis";
@@ -43,7 +44,7 @@ async function getObjectArrayCache(ListName: string): Promise<RedisObject[]> {
 async function setObjectCache(
   listName: string,
   objectName: string,
-  data: UserTableType,
+  data: RedisObject | QueryResultRow,
   ttl: number = REDIS.REDIS_TTL
 ): Promise<boolean> {
   try {

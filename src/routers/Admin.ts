@@ -17,6 +17,7 @@ import {
   ValidateJoi,
 } from "../helper/validation/JoiValidation";
 import type { ObjectSchema } from "joi";
+import { photoUpload } from "../middleware/multer";
 
 const AdminRouter = Router();
 
@@ -32,13 +33,19 @@ const AdminRouter = Router();
   }
 })([
   ["/crud/hotel", DB.Hotel_Table, HotelRegister, HotelUpdate],
-  [
-    "/crud/product-master",
-    DB.Product_Maaster_Table,
-    ProductMRegister,
-    ProductMUpdate,
-  ],
   ["/crud/product", DB.Products_Table, ProductRegister, ProductUpdate],
 ]);
+
+AdminRouter.route(`/crud/product-master`)
+  .get(AllData(DB.Product_Maaster_Table))
+  .post(
+    photoUpload.single("file"),
+    ValidateJoi(ProductMRegister),
+    AddData(DB.Product_Maaster_Table)
+  );
+AdminRouter.route(`"/crud/product-master/:id`)
+  .get(DataById(DB.Product_Maaster_Table))
+  .patch(ValidateJoi(ProductMUpdate), UpdateData(DB.Product_Maaster_Table))
+  .delete(DeleteData(DB.Product_Maaster_Table));
 
 export { AdminRouter };

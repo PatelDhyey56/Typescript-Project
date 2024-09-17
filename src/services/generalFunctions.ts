@@ -19,12 +19,17 @@ const AllData =
       next(e);
     }
   };
+
 const AddData =
   (tableName: string) =>
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const objEntries = Object.entries(req.body) as [string, string][];
     const objValues = Object.values(req.body) as string[];
     try {
+      if (req.file) {
+        objEntries.push(["image", req.file.filename]);
+        objValues.push(req.file.filename);
+      }
       result = await addData(tableName, objEntries, objValues);
       genralResponse(res, 200, { message: Messages.All_Users, result });
     } catch (e) {

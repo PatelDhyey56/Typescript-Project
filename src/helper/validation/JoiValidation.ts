@@ -3,7 +3,6 @@ import Joi from "joi";
 
 export const ValidateJoi = (schema: Joi.ObjectSchema) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    console.log(req.file);
     const validator = schema.validate(req.body);
     if (validator.error) throw new Error(validator.error.message);
     next();
@@ -62,7 +61,6 @@ export const ProductMRegister = Joi.object({
     .valid(...Object.values(ProductEatType))
     .required(),
   product_type: Joi.string().max(45).required(),
-  place: Joi.string().max(45).required(),
 });
 export const ProductMUpdate = Joi.object({
   product_name: Joi.string().max(45),

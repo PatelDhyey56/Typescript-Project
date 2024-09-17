@@ -8,7 +8,7 @@ export let userData: RedisObject[] | RedisObject;
 async function setObjectArrayCache(
   listName: string,
   objectName: string,
-  data: (UserTableType | RedisObject)[],
+  data: (QueryResultRow | RedisObject)[],
   ttl: number = REDIS.REDIS_TTL
 ): Promise<boolean> {
   try {
@@ -41,10 +41,11 @@ async function getObjectArrayCache(ListName: string): Promise<RedisObject[]> {
     return [];
   }
 }
+
 async function setObjectCache(
   listName: string,
   objectName: string,
-  data: RedisObject | QueryResultRow,
+  data: QueryResultRow | RedisObject,
   ttl: number = REDIS.REDIS_TTL
 ): Promise<boolean> {
   try {
@@ -61,6 +62,7 @@ async function setObjectCache(
     return false;
   }
 }
+
 async function getObjectCache(key: string): Promise<boolean | RedisObject> {
   try {
     userData = await redis.hGetAll(key);
@@ -89,10 +91,14 @@ async function removeCache(
 const objectToString = (e: Object): RedisObject => {
   let obj: { [key: string]: string } = {};
   Object.keys(e).forEach((key) => {
-    obj[key] = String(e[key as keyof typeof e]) ?? "null";
+    obj[key] =
+      typeof e[key as keyof typeof e] != "object"
+        ? String(e[key as keyof typeof e])
+        : JSON.stringify(e[key as keyof typeof e]) ?? "null";
   });
   return obj;
 };
+
 export {
   setObjectArrayCache,
   getObjectArrayCache,

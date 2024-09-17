@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { OrderValidate, ValidateJoi } from "../helper/validation/JoiValidation";
-import { DeleteData } from "../controller/generalFunctions";
+import { DeleteData } from "../services/generalFunctions";
 import { AddOrder, UpdateOrder } from "../controller/orders";
 import DB from "../helper/textHelpers/Db_helper";
 import RedisMessages from "../helper/textHelpers/redisHelper";
@@ -12,32 +12,9 @@ import {
 import {
   redisGetDataById,
   redisGetListOfData,
-} from "../controller/redisGenralFunctions";
+} from "../services/redisGenralFunctions";
 
 const orderRouter = Router();
-
-orderRouter
-  .route("/products")
-  .get(
-    redisGetListOfData(
-      DB.All_Product_List,
-      RedisMessages.See_Product_List,
-      RedisMessages.See_Product_Hash,
-      setObjectArrayCache,
-      Messages.All_Products
-    )
-  );
-orderRouter
-  .route("/products/:id")
-  .get(
-    redisGetDataById(
-      DB.All_Product_List,
-      RedisMessages.See_Product_List,
-      RedisMessages.See_Product_Hash,
-      setObjectCache,
-      Messages.Product_Get
-    )
-  );
 
 orderRouter
   .route("/order")
@@ -58,7 +35,7 @@ orderRouter
       DB.Order_Table,
       RedisMessages.See_Order_List,
       RedisMessages.See_Order_Hash,
-      setObjectArrayCache,
+      setObjectCache,
       Messages.All_Orders
     )
   )

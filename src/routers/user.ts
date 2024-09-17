@@ -2,10 +2,13 @@ import { Router } from "express";
 import { deleteUser, updateUser } from "../controller/user";
 import { UserUpdate, ValidateJoi } from "../helper/validation/JoiValidation";
 import { photoUpload } from "../middleware/multer";
-import { redisGetListOfData } from "../controller/redisGenralFunctions";
+import { redisGetListOfData } from "../services/redisGenralFunctions";
 import DB from "../helper/textHelpers/Db_helper";
 import RedisMessages from "../helper/textHelpers/redisHelper";
-import { setObjectArrayCache } from "../helper/DbHelpers/redis/userRedis";
+import {
+  setObjectArrayCache,
+  setObjectCache,
+} from "../helper/DbHelpers/redis/userRedis";
 import Messages from "../helper/textHelpers/messages";
 
 const userRouter = Router();
@@ -28,7 +31,7 @@ userRouter
       DB.User_Table,
       RedisMessages.See_User_List,
       RedisMessages.See_User_Hash,
-      setObjectArrayCache,
+      setObjectCache,
       Messages.User_Get
     )
   )

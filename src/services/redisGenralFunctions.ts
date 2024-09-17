@@ -20,6 +20,7 @@ const redisGetListOfData =
     try {
       redisData = await getObjectArrayCache(redisListName);
       result = !!redisData.length ? redisData : await selectTable(tableName);
+
       !redisData.length &&
         redisSetFunction(redisListName, redisHashName, result);
       genralResponse(res, 200, { message, result });

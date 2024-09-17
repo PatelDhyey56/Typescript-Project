@@ -24,7 +24,7 @@ const errorHandler = (
   res.status(400).send({ message: err.message || Messages.SERVER_ERROR });
 };
 
-const ValidateUser = (
+const AuthenticateUser = (
   req: Request,
   res: Response,
   next: NextFunction
@@ -38,4 +38,4 @@ const ValidateUser = (
     next(e);
   }
 };
-export { genralResponse, errorHandler, ValidateUser };
+export { genralResponse, errorHandler, AuthenticateUser };

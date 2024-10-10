@@ -7,41 +7,56 @@ import settingsMapper from "lib/mappers/settings";
 import responseDispatcher from "lib/response-dispatcher";
 
 class SettingsControllerV1 {
-  editMaintenanceConfig = async (reqBody: any) => {
-    const isUnderMaintenance = !!reqBody.isUnderMaintenance;
-    const maintenanceMessage = reqBody.maintenanceMessage;
-    const maintenanceUsers: string[] = !!reqBody.maintenanceUsers
-      ? reqBody.maintenanceUsers.split(",")
-      : [];
+  editNoticeMessage = async (reqBody: any) => {
+    const generalConfig = await postgresInstance.readQuery(
+      `select * from app_settings where setting_type=$1`,
+      ["general_app_config"]
+    );
 
-    let usersList = [];
-    if (!!maintenanceUsers.length) {
-      usersList = await postgresInstance.readQuery(
-        `select id, contact_no from user_info where contact_no IN (${maintenanceUsers.map(
-          (user) => `'${user.trim()}'`
-        )})`
-      );
+    if (reqBody.noticeMessage != undefined) {
+      generalConfig[0].setting_data.noticeMessage = reqBody.noticeMessage;
     }
-    const maintenanceUsersList = usersList.map((user: any) => {
-      return { [user.id]: user.contact_no };
-    });
 
-    const data = {
-      isUnderMaintenance: isUnderMaintenance,
-      maintenanceMessage: maintenanceMessage,
-      maintenanceUsers: maintenanceUsersList,
-    };
+    // if (reqBody.payoutsEnable !== undefined) {
+    //   generalConfig[0].setting_data.isPayoutEnabled = reqBody.payoutsEnable;
+    // }
+
+    // if (reqBody.depositEnable !== undefined) {
+    //   generalConfig[0].setting_data.isDepositEnabled = reqBody.depositEnable;
+    // }
+
+    // if (reqBody.maximumPayoutPerDay >= 0) {
+    //   generalConfig[0].setting_data.maxPayoutPerDay =
+    //     reqBody.maximumPayoutPerDay;
+    // }
+
+    // if (reqBody.maximumWithdrawTransferPerDay >= 0) {
+    //   generalConfig[0].setting_data.maximumWithdrawTransferPerDay =
+    //     reqBody.maximumWithdrawTransferPerDay;
+    // }
+
+    if (reqBody.mindSupportTime) {
+      generalConfig[0].setting_data.mindSupportTime = reqBody.mindSupportTime;
+    }
+    if (reqBody.telegramNotifyTime) {
+      generalConfig[0].setting_data.telegramNotifyTime =
+        reqBody.telegramNotifyTime;
+    }
+
     await postgresInstance.writeQuery(
       `
-            update app_settings set setting_data=$1 
-            where setting_type='app_maintenance'
-        `,
-      [JSON.stringify(data)]
+      update app_settings set setting_data=$1 where id=$2
+      `,
+      [JSON.stringify(generalConfig[0].setting_data), generalConfig[0].id]
     );
-    await redisHelper.updateAppSettings({ isUnderMaintenance });
+
+    await redisHelper.updateAppSettings({
+      isPayoutEnabled: generalConfig[0].setting_data.isPayoutEnabled,
+      isDepositEnabled: generalConfig[0].setting_data.isDepositEnabled,
+    });
   };
 
-  editGeneralConfig = async (reqBody: any) => {
+  editAmountConfig = async (reqBody: any) => {
     const generalConfig = await postgresInstance.readQuery(`
             select * from app_settings where setting_type='amount_settings' OR setting_type='general_app_config' order by id asc
         `);
@@ -55,10 +70,6 @@ class SettingsControllerV1 {
     }
     if (reqBody.referralAmount != undefined) {
       generalConfig[0].setting_data.referralAmount = reqBody.referralAmount;
-    }
-    if (reqBody.referralUpToAmount != undefined) {
-      generalConfig[0].setting_data.referralUpToAmount =
-        reqBody.referralUpToAmount;
     }
     if (reqBody.minPayoutAmount != undefined) {
       generalConfig[0].setting_data.minPayoutAmount = reqBody.minPayoutAmount;
@@ -98,6 +109,67 @@ class SettingsControllerV1 {
     );
   };
 
+  editURLsConfig = async (reqBody: any) => {
+    const generalConfig = await postgresInstance.readQuery(`
+            select * from app_settings where setting_type='urls'
+        `);
+
+    if (reqBody.privacyPolicy) {
+      generalConfig[0].setting_data.privacyPolicy = reqBody.privacyPolicy;
+    }
+    if (reqBody.termsAndConditions) {
+      generalConfig[0].setting_data.termsAndConditions =
+        reqBody.termsAndConditions;
+    }
+    if (reqBody.supportUrl) {
+      generalConfig[0].setting_data.supportUrl = reqBody.supportUrl;
+    }
+    // if (reqBody.about) {
+    //   generalConfig[0].setting_data.about = reqBody.about;
+    // }
+
+    await postgresInstance.writeQuery(
+      `
+            update app_settings set setting_data=$1 where id=$2
+        `,
+      [JSON.stringify(generalConfig[0].setting_data), generalConfig[0].id]
+    );
+  };
+
+  editBonusCappingConfig = async (reqBody: any) => {
+    const generalConfig = await postgresInstance.readQuery(`
+            select * from app_settings where setting_type='bonus_capping_settings'
+        `);
+
+    if (!generalConfig.length) {
+      console.log(
+        "insert bonus_capping_settings ==>> ",
+        JSON.stringify(reqBody)
+      );
+      const exitSetting = await postgresInstance.readQuery(
+        `select id from app_settings order by id desc limit 1`
+      );
+
+      await postgresInstance.writeQuery(
+        `insert into app_settings (id, setting_type, setting_data) values($1,$2,$3)`,
+        [
+          exitSetting[0].id + 1,
+          "bonus_capping_settings",
+          JSON.stringify(reqBody),
+        ]
+      );
+    } else {
+      console.log(
+        "update bonus_capping_settings ==>> ",
+        JSON.stringify(reqBody)
+      );
+      await postgresInstance.writeQuery(
+        `update app_settings set setting_data=$1 where id=$2`,
+        [JSON.stringify(reqBody), generalConfig[0].id]
+      );
+    }
+  };
+
   editAppConfig = async (reqBody: any) => {
     const generalConfig = await postgresInstance.readQuery(`
                 select * from app_settings where setting_type='app_version'
@@ -122,12 +194,9 @@ class SettingsControllerV1 {
       generalConfig[0].setting_data.ios.appUpdateUrl = reqBody.ios_appUpdateUrl;
     }
 
-    if (reqBody.appVersionCode != undefined) {
-      generalConfig[0].setting_data.appVersion = reqBody.appVersionCode;
-    }
-    if (reqBody.appUpdateUrl != undefined) {
-      generalConfig[0].setting_data.appUpdateUrl = reqBody.appUpdateUrl;
-    }
+    // if (reqBody.appVersionCode != undefined) {
+    //   generalConfig[0].setting_data.appVersion = reqBody.appVersionCode;
+    // }
 
     if (reqBody.appSocketUrl != undefined) {
       generalConfig[0].setting_data.app_socket_url = reqBody.appSocketUrl;
@@ -144,56 +213,156 @@ class SettingsControllerV1 {
     );
   };
 
-  editURLsConfig = async (reqBody: any) => {
-    const generalConfig = await postgresInstance.readQuery(`
-            select * from app_settings where setting_type='urls'
+  editMaintenanceConfig = async (reqBody: any) => {
+    const isUnderMaintenance = !!reqBody.isUnderMaintenance;
+    const maintenanceMessage = reqBody.maintenanceMessage;
+    const maintenanceUsers: string[] = !!reqBody.maintenanceUsers
+      ? reqBody.maintenanceUsers.split(",")
+      : [];
+
+    let usersList = [];
+    if (!!maintenanceUsers.length) {
+      usersList = await postgresInstance.readQuery(
+        `select id, contact_no from user_info where contact_no IN (${maintenanceUsers.map(
+          (user) => `'${user.trim()}'`
+        )})`
+      );
+    }
+    const maintenanceUsersList = usersList.map((user: any) => {
+      return { [user.id]: user.contact_no };
+    });
+
+    const data = {
+      isUnderMaintenance: isUnderMaintenance,
+      maintenanceMessage: maintenanceMessage,
+      maintenanceUsers: maintenanceUsersList,
+    };
+    await postgresInstance.writeQuery(
+      `
+            update app_settings set setting_data=$1 
+            where setting_type='app_maintenance'
+        `,
+      [JSON.stringify(data)]
+    );
+    await redisHelper.updateAppSettings({ isUnderMaintenance });
+  };
+
+  editDisplayConfig = async (reqBody: any) => {
+    const featureConfig = await postgresInstance.readQuery(`
+            select * from app_settings where setting_type in ('amount_settings','general_app_config',
+           'feature_configuration', 'message_templates') order by id asc
         `);
-
-    if (reqBody.privacyPolicy) {
-      generalConfig[0].setting_data.privacyPolicy = reqBody.privacyPolicy;
+    if (reqBody.referralUpToAmount !== undefined) {
+      featureConfig[0].setting_data.referralUpToAmount =
+        reqBody.referralUpToAmount;
     }
-    if (reqBody.termsAndConditions) {
-      generalConfig[0].setting_data.termsAndConditions =
-        reqBody.termsAndConditions;
-    }
-    if (reqBody.supportUrl) {
-      generalConfig[0].setting_data.supportUrl = reqBody.supportUrl;
-    }
-    if (reqBody.about) {
-      generalConfig[0].setting_data.about = reqBody.about;
-    }
-
     await postgresInstance.writeQuery(
       `
             update app_settings set setting_data=$1 where id=$2
         `,
-      [JSON.stringify(generalConfig[0].setting_data), generalConfig[0].id]
+      [JSON.stringify(featureConfig[0].setting_data), featureConfig[0].id]
+    );
+
+    if (reqBody.noticeMessage !== undefined) {
+      featureConfig[1].setting_data.noticeMessage = reqBody.noticeMessage;
+    }
+    await postgresInstance.writeQuery(
+      `
+            update app_settings set setting_data=$1 where id=$2
+        `,
+      [JSON.stringify(featureConfig[1].setting_data), featureConfig[1].id]
+    );
+
+    if (reqBody.depositFeePercentage != undefined) {
+      featureConfig[2].setting_data.depositFeePercentage =
+        reqBody.depositFeePercentage;
+    }
+    if (reqBody.withdrawFeeAmount != undefined) {
+      featureConfig[2].setting_data.withdrawFeeAmount =
+        reqBody.withdrawFeeAmount;
+    }
+    await postgresInstance.writeQuery(
+      `
+            update app_settings set setting_data=$1 where id=$2
+        `,
+      [JSON.stringify(featureConfig[2].setting_data), featureConfig[2].id]
+    );
+
+    if (reqBody.closeToLeaderboardWinningListMessage !== undefined) {
+      featureConfig[3].setting_data.closeToLeaderboardWinningListMessage =
+        reqBody.closeToLeaderboardWinningListMessage;
+    }
+    if (reqBody.presentOnLeaderboardWinningListMessage !== undefined) {
+      featureConfig[3].setting_data.presentOnLeaderboardWinningListMessage =
+        reqBody.presentOnLeaderboardWinningListMessage;
+    }
+    await postgresInstance.writeQuery(
+      `
+            update app_settings set setting_data=$1 where id=$2
+        `,
+      [JSON.stringify(featureConfig[3].setting_data), featureConfig[3].id]
     );
   };
 
-  editSMSConfig = async (reqBody: any) => {
-    const generalConfig = await postgresInstance.readQuery(`
-            select * from app_settings where setting_type='sms_gateway_config'
+  editFeatureConfig = async (reqBody: any) => {
+    const featureConfig = await postgresInstance.readQuery(`
+            select * from app_settings where setting_type='feature_configuration'
         `);
 
-    if (reqBody.senderId != undefined) {
-      generalConfig[0].setting_data.senderId = reqBody.senderId;
+    if (reqBody.showTopLeaderboardUsers !== undefined) {
+      featureConfig[0].setting_data.showTopLeaderboardUsers =
+        reqBody.showTopLeaderboardUsers;
     }
-    if (reqBody.user != undefined) {
-      generalConfig[0].setting_data.user = reqBody.user;
+
+    if (reqBody.showProfileAnalytics !== undefined) {
+      featureConfig[0].setting_data.showProfileAnalytics =
+        reqBody.showProfileAnalytics;
     }
-    if (reqBody.key != undefined) {
-      generalConfig[0].setting_data.key = reqBody.key;
+
+    if (reqBody.showOnlinePlayers !== undefined) {
+      featureConfig[0].setting_data.showOnlinePlayers =
+        reqBody.showOnlinePlayers;
     }
-    if (reqBody.messageTemplate != undefined) {
-      generalConfig[0].setting_data.messageTemplate = reqBody.messageTemplate;
+
+    if (reqBody.showGameWaitingPlayer !== undefined) {
+      featureConfig[0].setting_data.showGameWaitingPlayer =
+        reqBody.showGameWaitingPlayer;
+    }
+
+    if (reqBody.showStateSelection !== undefined) {
+      featureConfig[0].setting_data.showStateSelection =
+        reqBody.showStateSelection;
+    }
+
+    if (reqBody.showLanguageSelection !== undefined) {
+      featureConfig[0].setting_data.showLanguageSelection =
+        reqBody.showLanguageSelection;
+    }
+
+    if (reqBody.enableAppsFlyer !== undefined) {
+      featureConfig[0].setting_data.enableAppsFlyer = reqBody.enableAppsFlyer;
+    }
+
+    if (reqBody.enableWithdrawTransfers !== undefined) {
+      featureConfig[0].setting_data.enableWithdrawTransfers =
+        reqBody.enableWithdrawTransfers;
+    }
+
+    if (reqBody.enableByteProHackDetect !== undefined) {
+      featureConfig[0].setting_data.enableByteProHackDetect =
+        reqBody.enableByteProHackDetect;
+    }
+
+    if (reqBody.enableLeaderboardWinnerPopup !== undefined) {
+      featureConfig[0].setting_data.enableLeaderboardWinnerPopup =
+        reqBody.enableLeaderboardWinnerPopup;
     }
 
     await postgresInstance.writeQuery(
       `
             update app_settings set setting_data=$1 where id=$2
         `,
-      [JSON.stringify(generalConfig[0].setting_data), generalConfig[0].id]
+      [JSON.stringify(featureConfig[0].setting_data), featureConfig[0].id]
     );
   };
 
@@ -364,55 +533,6 @@ class SettingsControllerV1 {
     }
   };
 
-  editNoticeMessage = async (reqBody: any) => {
-    const generalConfig = await postgresInstance.readQuery(
-      `select * from app_settings where setting_type=$1`,
-      ["general_app_config"]
-    );
-
-    if (reqBody.noticeMessage != undefined) {
-      generalConfig[0].setting_data.noticeMessage = reqBody.noticeMessage;
-    }
-
-    // if (reqBody.payoutsEnable !== undefined) {
-    //   generalConfig[0].setting_data.isPayoutEnabled = reqBody.payoutsEnable;
-    // }
-
-    // if (reqBody.depositEnable !== undefined) {
-    //   generalConfig[0].setting_data.isDepositEnabled = reqBody.depositEnable;
-    // }
-
-    // if (reqBody.maximumPayoutPerDay >= 0) {
-    //   generalConfig[0].setting_data.maxPayoutPerDay =
-    //     reqBody.maximumPayoutPerDay;
-    // }
-
-    // if (reqBody.maximumWithdrawTransferPerDay >= 0) {
-    //   generalConfig[0].setting_data.maximumWithdrawTransferPerDay =
-    //     reqBody.maximumWithdrawTransferPerDay;
-    // }
-
-    if (reqBody.mindSupportTime) {
-      generalConfig[0].setting_data.mindSupportTime = reqBody.mindSupportTime;
-    }
-    if (reqBody.telegramNotifyTime) {
-      generalConfig[0].setting_data.telegramNotifyTime =
-        reqBody.telegramNotifyTime;
-    }
-
-    await postgresInstance.writeQuery(
-      `
-      update app_settings set setting_data=$1 where id=$2
-      `,
-      [JSON.stringify(generalConfig[0].setting_data), generalConfig[0].id]
-    );
-
-    await redisHelper.updateAppSettings({
-      isPayoutEnabled: generalConfig[0].setting_data.isPayoutEnabled,
-      isDepositEnabled: generalConfig[0].setting_data.isDepositEnabled,
-    });
-  };
-
   editMessageTemplate = async (reqBody: any) => {
     const messageTemplateConfig = await postgresInstance.readQuery(
       `select * from app_settings where setting_type=$1`,
@@ -497,94 +617,29 @@ class SettingsControllerV1 {
     );
   };
 
-  editBonusCappingConfig = async (reqBody: any) => {
+  editSMSConfig = async (reqBody: any) => {
     const generalConfig = await postgresInstance.readQuery(`
-            select * from app_settings where setting_type='bonus_capping_settings'
-        `);
+            select * from app_settings where setting_type='sms_gateway_config'
+            `);
 
-    if (!generalConfig.length) {
-      console.log(
-        "insert bonus_capping_settings ==>> ",
-        JSON.stringify(reqBody)
-      );
-      const exitSetting = await postgresInstance.readQuery(
-        `select id from app_settings order by id desc limit 1`
-      );
-
-      await postgresInstance.writeQuery(
-        `insert into app_settings (id, setting_type, setting_data) values($1,$2,$3)`,
-        [
-          exitSetting[0].id + 1,
-          "bonus_capping_settings",
-          JSON.stringify(reqBody),
-        ]
-      );
-    } else {
-      console.log(
-        "update bonus_capping_settings ==>> ",
-        JSON.stringify(reqBody)
-      );
-      await postgresInstance.writeQuery(
-        `update app_settings set setting_data=$1 where id=$2`,
-        [JSON.stringify(reqBody), generalConfig[0].id]
-      );
+    if (reqBody.key != undefined) {
+      generalConfig[0].setting_data.key = reqBody.key;
     }
-  };
-
-  editFeatureConfig = async (reqBody: any) => {
-    const featureConfig = await postgresInstance.readQuery(`
-            select * from app_settings where setting_type in ('amount_settings','general_app_config',
-           'feature_configuration', 'message_templates') order by id asc
-        `);
-    if (reqBody.referralUpToAmount !== undefined) {
-      featureConfig[0].setting_data.referralUpToAmount =
-        reqBody.referralUpToAmount;
+    if (reqBody.messageTemplate != undefined) {
+      generalConfig[0].setting_data.messageTemplate = reqBody.messageTemplate;
     }
+    if (reqBody.senderId != undefined) {
+      generalConfig[0].setting_data.senderId = reqBody.senderId;
+    }
+    if (reqBody.user != undefined) {
+      generalConfig[0].setting_data.user = reqBody.user;
+    }
+
     await postgresInstance.writeQuery(
       `
             update app_settings set setting_data=$1 where id=$2
         `,
-      [JSON.stringify(featureConfig[0].setting_data), featureConfig[0].id]
-    );
-
-    if (reqBody.noticeMessage !== undefined) {
-      featureConfig[1].setting_data.noticeMessage = reqBody.noticeMessage;
-    }
-    await postgresInstance.writeQuery(
-      `
-            update app_settings set setting_data=$1 where id=$2
-        `,
-      [JSON.stringify(featureConfig[1].setting_data), featureConfig[1].id]
-    );
-
-    if (reqBody.depositFeePercentage != undefined) {
-      featureConfig[2].setting_data.depositFeePercentage =
-        reqBody.depositFeePercentage;
-    }
-    if (reqBody.withdrawFeeAmount != undefined) {
-      featureConfig[2].setting_data.withdrawFeeAmount =
-        reqBody.withdrawFeeAmount;
-    }
-    await postgresInstance.writeQuery(
-      `
-            update app_settings set setting_data=$1 where id=$2
-        `,
-      [JSON.stringify(featureConfig[2].setting_data), featureConfig[2].id]
-    );
-
-    if (reqBody.closeToLeaderboardWinningListMessage !== undefined) {
-      featureConfig[3].setting_data.closeToLeaderboardWinningListMessage =
-        reqBody.closeToLeaderboardWinningListMessage;
-    }
-    if (reqBody.presentOnLeaderboardWinningListMessage !== undefined) {
-      featureConfig[3].setting_data.presentOnLeaderboardWinningListMessage =
-        reqBody.presentOnLeaderboardWinningListMessage;
-    }
-    await postgresInstance.writeQuery(
-      `
-            update app_settings set setting_data=$1 where id=$2
-        `,
-      [JSON.stringify(featureConfig[3].setting_data), featureConfig[3].id]
+      [JSON.stringify(generalConfig[0].setting_data), generalConfig[0].id]
     );
   };
 
@@ -791,7 +846,7 @@ class SettingsControllerV1 {
               apiEndPoint: "/Display-Configs",
               label: "Display Configs",
               developerSettingId:
-                constants.SETTINGS_PARAMS_SETS.FEATURE_CONFIGURATION,
+                constants.SETTINGS_PARAMS_SETS.DISPLAY_CONFIGS,
               inputField,
             });
             break;
@@ -1107,7 +1162,7 @@ class SettingsControllerV1 {
             ]) {
               if (
                 item.developerSettingId ==
-                constants.SETTINGS_PARAMS_SETS.FEATURE_CONFIGURATION
+                constants.SETTINGS_PARAMS_SETS.DISPLAY_CONFIGS
               ) {
                 item.inputField.push(...inputField);
                 flag = true;
@@ -1119,7 +1174,7 @@ class SettingsControllerV1 {
                 apiEndPoint: "/Display-Configs",
                 label: "Display Configs",
                 developerSettingId:
-                  constants.SETTINGS_PARAMS_SETS.FEATURE_CONFIGURATION,
+                  constants.SETTINGS_PARAMS_SETS.DISPLAY_CONFIGS,
                 inputField,
               });
               flag = false;
@@ -1386,7 +1441,7 @@ class SettingsControllerV1 {
             ]) {
               if (
                 item.developerSettingId ==
-                constants.SETTINGS_PARAMS_SETS.FEATURE_CONFIGURATION
+                constants.SETTINGS_PARAMS_SETS.DISPLAY_CONFIGS
               ) {
                 item.inputField.push(...inputField);
                 flag = true;
@@ -1398,7 +1453,7 @@ class SettingsControllerV1 {
                 apiEndPoint: "/Display-Configs",
                 label: "Display Configs",
                 developerSettingId:
-                  constants.SETTINGS_PARAMS_SETS.FEATURE_CONFIGURATION,
+                  constants.SETTINGS_PARAMS_SETS.DISPLAY_CONFIGS,
                 inputField,
               });
               flag = false;
@@ -1429,7 +1484,7 @@ class SettingsControllerV1 {
             ]) {
               if (
                 item.developerSettingId ==
-                constants.SETTINGS_PARAMS_SETS.FEATURE_CONFIGURATION
+                constants.SETTINGS_PARAMS_SETS.DISPLAY_CONFIGS
               ) {
                 item.inputField.push(...inputField);
                 flag = true;
@@ -1441,7 +1496,7 @@ class SettingsControllerV1 {
                 apiEndPoint: "/Display-Configs",
                 label: "Display Configs",
                 developerSettingId:
-                  constants.SETTINGS_PARAMS_SETS.FEATURE_CONFIGURATION,
+                  constants.SETTINGS_PARAMS_SETS.DISPLAY_CONFIGS,
                 inputField,
               });
               flag = false;
@@ -1548,7 +1603,7 @@ class SettingsControllerV1 {
           break;
 
         case constants.SETTINGS_PARAMS_SETS.AMOUNT_SETTINGS:
-          await this.editGeneralConfig(reqBody.data);
+          await this.editAmountConfig(reqBody.data);
           message = "General config updated";
           break;
 
@@ -1572,8 +1627,13 @@ class SettingsControllerV1 {
           message = "Maintenance mode updated";
           break;
 
-        case constants.SETTINGS_PARAMS_SETS.FEATURE_CONFIGURATION:
+        case constants.SETTINGS_PARAMS_SETS.DISPLAY_CONFIGS:
           await this.editFeatureConfig(reqBody.data);
+          message = "Feature configuration updated";
+          break;
+
+        case constants.SETTINGS_PARAMS_SETS.FEATURE_CONFIGURATION:
+          await this.editDisplayConfig(reqBody.data);
           message = "Feature configuration updated";
           break;
 
@@ -1639,3 +1699,32 @@ class SettingsControllerV1 {
 }
 const settingsControllerV1 = new SettingsControllerV1();
 export default settingsControllerV1;
+
+const SETTINGS_PARAMS_SETS = {
+  GENERAL: 1,
+  AMOUNT_SETTINGS: 2,
+  URLS: 3,
+  BONUSCAPPING_SETTING: 4,
+  APP_CONFIG: 5,
+  APP_MAINTENANCE: 6,
+  DISPLAY_CONFIGS: 7,
+  FEATURE_CONFIGURATION: 8,
+  CASHFREEPAYOUT_GATEWAY: 9,
+  CASHFREEPAYMENT_GATEWAY: 10,
+  RAZORPAYPAYOUT_GATEWAY: 11,
+  RAZORPAYPAYMENT_GATEWAY: 12,
+  PHONEPEPAYMENT_GATEWAY: 13,
+  DEPOSIT_SETTINGS: 14,
+  PAYOUT_SETTINGS: 15,
+  KYC_CONFIG: 17,
+  SMSGATEWAY: 18,
+};
+
+const SETTINGS_SECTIONS = {
+  GENERAL: "General",
+  APP_Settings: "App Settings",
+  PG_Deposit: "PG - Deposit",
+  PG_Payout_: "PG - Payout",
+  KYC: "KYC",
+  SMS_Gateways: "SMS Gateways",
+};

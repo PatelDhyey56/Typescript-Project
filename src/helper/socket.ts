@@ -61,16 +61,15 @@ const group = io.of("group");
 //   console.log(socket.data.user);
 //   next();
 // });
-
 chat.on("connection", (socket) => {
   console.log("User connected to Talk with id:", socket.id);
-
+  socket.data.userId = socket.id;
   //? Middleware of after connectin of socket for chat
   socket.use(([event, ...args], next) => {
-    console.log(event, args);
     args.forEach(
       (e) => e.length > 100 && next(new Error("Enter Valid Length of chat!!!"))
     );
+    next();
   });
   socket.on("error", (err) => {
     if (err) {
@@ -97,6 +96,10 @@ chat.on("connection", (socket) => {
   socket.on("disconnect", () =>
     console.log("User Dis-Connected with id:", socket.id)
   );
+  (async () => {
+    let sockets = await chat.fetchSockets();
+    sockets.forEach((e) => console.log(e.data.userId));
+  })();
 });
 
 group.on("connection", (socket) => {

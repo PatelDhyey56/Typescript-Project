@@ -5,11 +5,12 @@ import { createServer } from "http";
 import path from "path";
 import { SERVER } from "./config";
 import { errorHandler } from "./helper/generalFunction";
-import "./helper/socket";
 import router from "./routers/router";
 
 const app = express();
 export const httpServer = createServer(app);
+
+import "./helper/socket";
 
 const publicPath: string = path.join(__dirname, "../public");
 const uploadPath: string = path.join(__dirname, "../public/uploads");
